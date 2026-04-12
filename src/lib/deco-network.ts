@@ -121,7 +121,7 @@ export class DecoNetworkClient {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
-        ...(data && { body: JSON.stringify(data) }),
+        ...(data !== undefined ? { body: JSON.stringify(data) } : {}),
       });
 
       if (!response.ok) {
