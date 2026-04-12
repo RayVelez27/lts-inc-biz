@@ -111,7 +111,7 @@ export class DecoNetworkClient {
   /**
    * Make an authenticated request to the DecoNetwork API
    */
-  private async request<T>(endpoint: string, method: string = 'GET', data?: any): Promise<T> {
+  private async request<T>(endpoint: string, method: string = 'GET', data?: unknown): Promise<T> {
     const token = await this.authenticate();
 
     try {
