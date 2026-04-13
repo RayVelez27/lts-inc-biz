@@ -23,7 +23,6 @@ import {
   ChevronRight,
   Heart,
 } from "lucide-react";
-import { SocialLoginButtons } from "@/components/SocialLoginButtons";
 
 type TabType = "profile" | "orders" | "addresses" | "wishlist";
 
@@ -366,32 +365,6 @@ export default function AccountPage() {
               </form>
             )}
 
-            <div className="mt-6">
-              <SocialLoginButtons
-                mode={authMode}
-                onSuccess={(provider, socialUser) => {
-                  // Create/login user from social auth
-                  const users = JSON.parse(localStorage.getItem("lts-users") || "[]");
-                  let foundUser = users.find((u: { email: string }) => u.email === socialUser.email);
-
-                  if (!foundUser) {
-                    foundUser = {
-                      id: `user-${Date.now()}`,
-                      email: socialUser.email,
-                      firstName: socialUser.name.split(" ")[0],
-                      lastName: socialUser.name.split(" ").slice(1).join(" ") || "",
-                      provider,
-                      addresses: [],
-                    };
-                    users.push(foundUser);
-                    localStorage.setItem("lts-users", JSON.stringify(users));
-                  }
-
-                  localStorage.setItem("lts-user", JSON.stringify(foundUser));
-                  window.location.reload();
-                }}
-              />
-            </div>
           </div>
         </div>
 
