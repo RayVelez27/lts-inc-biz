@@ -39,8 +39,9 @@ export function Header() {
     <header className="sticky top-0 z-50 bg-white shadow-sm">
       {/* Top utility bar */}
       <div className="bg-navy text-white text-sm">
-        <div className="max-w-7xl mx-auto px-4 py-2 flex items-center justify-between">
-          <div className="flex items-center space-x-4">
+        <div className="max-w-7xl mx-auto px-4 py-2 flex items-center justify-end md:justify-between">
+          {/* Left cluster — hidden on mobile */}
+          <div className="hidden md:flex items-center space-x-4">
             <button
               type="button"
               className="flex items-center hover:text-gold transition-colors"
@@ -50,10 +51,11 @@ export function Header() {
             <a href="tel:207-774-1104" className="flex items-center hover:text-gold transition-colors">
               <Phone className="w-4 h-4 mr-1" /> 207-774-1104
             </a>
-            <a href="https://www.ltsincmaine.com" className="hidden sm:block hover:text-gold transition-colors">
+            <a href="https://www.ltsincmaine.com" className="hover:text-gold transition-colors">
               ltsincmaine.com
             </a>
           </div>
+          {/* Promo — desktop only */}
           <div className="hidden md:flex items-center space-x-4">
             <span className="text-gold font-medium">
               Save up to 20% with Volume Discounts
@@ -62,8 +64,9 @@ export function Header() {
               See Details
             </Link>
           </div>
+          {/* Right cluster — mobile shows only Contact Us + Sign In */}
           <div className="flex items-center space-x-4">
-            <LanguageSelector className="text-white border-white/30 hover:border-white" />
+            <LanguageSelector className="hidden md:block text-white border-white/30 hover:border-white" />
             <Link href="/contact" className="hover:text-gold transition-colors">Contact Us</Link>
             <Link href="/account" className="hover:text-gold transition-colors flex items-center gap-1">
               <User className="w-4 h-4" />
