@@ -60,7 +60,7 @@ export function SearchBar({ className = "" }: { className?: string }) {
         product.name.toLowerCase().includes(searchTerm) ||
         product.description.toLowerCase().includes(searchTerm) ||
         product.category.toLowerCase().includes(searchTerm) ||
-        product.subcategory.toLowerCase().includes(searchTerm)
+        (product.subcategory?.toLowerCase().includes(searchTerm) ?? false)
       ) {
         matches.push({
           type: "product",

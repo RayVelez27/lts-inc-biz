@@ -27,12 +27,12 @@ export function Header() {
   const { totalItems: wishlistCount } = useWishlist();
 
   const navItems = [
-    { name: "CLOTHING", href: "/products?category=clothing", key: "clothing" },
-    { name: "OUTERWEAR", href: "/products?category=outerwear", key: "outerwear" },
-    { name: "FLEECE SHOP", href: "/products?category=fleece", key: "fleece" },
-    { name: "BAGS & TOTES", href: "/products?category=bags", key: "bags" },
-    { name: "BUSINESS GIFTS", href: "/products?category=gifts", key: "gifts" },
-    { name: "NEW ARRIVALS", href: "/products?new=true", key: null },
+    { name: "TEES", href: "/products?category=Tees", key: "Tees" },
+    { name: "POLOS", href: "/products?category=Polos", key: "Polos" },
+    { name: "HOODIES", href: "/products?category=Hoodies", key: "Hoodies" },
+    { name: "JACKETS", href: "/products?category=Jackets", key: "Jackets" },
+    { name: "CAPS", href: "/products?category=Caps", key: "Caps" },
+    { name: "FEATURED", href: "/products?featured=true", key: null },
   ];
 
   return (

@@ -30,6 +30,7 @@ function ProductsContent() {
   const categoryParam = searchParams.get("category");
   const subcategoryParam = searchParams.get("subcategory");
   const newParam = searchParams.get("new");
+  const featuredParam = searchParams.get("featured");
 
   const [sortBy, setSortBy] = useState("featured");
   const [selectedColors, setSelectedColors] = useState<string[]>([]);
@@ -71,6 +72,11 @@ function ProductsContent() {
       result = result.filter((p) => p.new);
     }
 
+    // Featured filter
+    if (featuredParam === "true") {
+      result = result.filter((p) => p.featured);
+    }
+
     // Color filter
     if (selectedColors.length > 0) {
       result = result.filter((p) =>
@@ -102,7 +108,7 @@ function ProductsContent() {
     }
 
     return result;
-  }, [categoryParam, subcategoryParam, newParam, selectedColors, selectedSizes, sortBy]);
+  }, [categoryParam, subcategoryParam, newParam, featuredParam, selectedColors, selectedSizes, sortBy]);
 
   const handleColorToggle = (color: string) => {
     setSelectedColors((prev) =>
@@ -423,29 +429,16 @@ function ProductsContent() {
                           ${product.price.toFixed(2)}
                         </span>
                         <div className="flex gap-1">
-                          {product.colors.slice(0, 4).map((color) => (
-                            <span
-                              key={color}
-                              className="w-4 h-4 rounded-full border border-gray-300"
-                              style={{
-                                backgroundColor:
-                                  color.toLowerCase() === "white"
-                                    ? "#fff"
-                                    : color.toLowerCase() === "navy"
-                                    ? "#1a3a5c"
-                                    : color.toLowerCase() === "black"
-                                    ? "#000"
-                                    : color.toLowerCase() === "gray"
-                                    ? "#6b7280"
-                                    : color.toLowerCase() === "red"
-                                    ? "#dc2626"
-                                    : color.toLowerCase() === "forest green"
-                                    ? "#166534"
-                                    : "#c5a572",
-                              }}
-                              title={color}
-                            />
-                          ))}
+                          {(product.colorSwatches ?? product.colors.map((n) => ({ id: n, name: n, hex: "" })))
+                            .slice(0, 4)
+                            .map((color) => (
+                              <span
+                                key={color.id}
+                                className="w-4 h-4 rounded-full border border-gray-300"
+                                style={{ backgroundColor: color.hex || "#c5a572" }}
+                                title={color.name}
+                              />
+                            ))}
                           {product.colors.length > 4 && (
                             <span className="text-xs text-gray-500">
                               +{product.colors.length - 4}
