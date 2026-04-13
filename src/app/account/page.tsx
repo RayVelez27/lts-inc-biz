@@ -34,6 +34,7 @@ export default function AccountPage() {
   const [activeTab, setActiveTab] = useState<TabType>("profile");
   const [authMode, setAuthMode] = useState<"login" | "register">("login");
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Login form state
@@ -77,11 +78,12 @@ export default function AccountPage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setNotice("");
     setIsSubmitting(true);
 
-    const success = await login(loginData.email, loginData.password);
-    if (!success) {
-      setError("Invalid email or password");
+    const result = await login(loginData.email, loginData.password);
+    if (!result.ok) {
+      setError(result.error ?? "Invalid email or password");
     }
     setIsSubmitting(false);
   };
@@ -89,6 +91,7 @@ export default function AccountPage() {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setNotice("");
 
     if (registerData.password !== registerData.confirmPassword) {
       setError("Passwords do not match");
@@ -101,7 +104,7 @@ export default function AccountPage() {
     }
 
     setIsSubmitting(true);
-    const success = await register({
+    const result = await register({
       email: registerData.email,
       password: registerData.password,
       firstName: registerData.firstName,
@@ -109,8 +112,13 @@ export default function AccountPage() {
       company: registerData.company,
     });
 
-    if (!success) {
-      setError("Email already exists");
+    if (!result.ok) {
+      setError(result.error ?? "Sign up failed");
+    } else if (result.needsEmailConfirmation) {
+      setNotice(
+        `Account created. We sent a confirmation link to ${registerData.email} — click it to finish signing in.`,
+      );
+      setAuthMode("login");
     }
     setIsSubmitting(false);
   };
@@ -181,6 +189,7 @@ export default function AccountPage() {
                 onClick={() => {
                   setAuthMode("login");
                   setError("");
+                  setNotice("");
                 }}
                 className={`flex-1 py-3 text-center font-semibold transition-colors ${
                   authMode === "login"
@@ -195,6 +204,7 @@ export default function AccountPage() {
                 onClick={() => {
                   setAuthMode("register");
                   setError("");
+                  setNotice("");
                 }}
                 className={`flex-1 py-3 text-center font-semibold transition-colors ${
                   authMode === "register"
@@ -209,6 +219,12 @@ export default function AccountPage() {
             {error && (
               <div className="mb-6 p-3 bg-red-50 border border-red-200 text-red-600 rounded-md text-sm">
                 {error}
+              </div>
+            )}
+
+            {notice && (
+              <div className="mb-6 p-3 bg-green-50 border border-green-200 text-green-700 rounded-md text-sm">
+                {notice}
               </div>
             )}
 

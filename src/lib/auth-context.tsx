@@ -48,11 +48,20 @@ interface RegisterData {
   company?: string;
 }
 
+export type AuthResult = {
+  ok: boolean;
+  /** Supabase error message, when ok is false. */
+  error?: string;
+  /** On register: true when signup succeeded but the user must verify email
+   *  before they can sign in (Supabase "Confirm email" setting is on). */
+  needsEmailConfirmation?: boolean;
+};
+
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<boolean>;
-  register: (data: RegisterData) => Promise<boolean>;
+  login: (email: string, password: string) => Promise<AuthResult>;
+  register: (data: RegisterData) => Promise<AuthResult>;
   logout: () => void;
   updateUser: (data: Partial<User>) => void;
   addAddress: (address: Omit<Address, "id">) => void;
@@ -181,17 +190,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Auth actions
   // ───────────────────────────────────────────────────────────────────────────
 
-  const login = async (email: string, password: string): Promise<boolean> => {
+  const login = async (email: string, password: string): Promise<AuthResult> => {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error || !data.user) {
       console.error("login failed:", error?.message);
-      return false;
+      return { ok: false, error: error?.message ?? "Invalid email or password" };
     }
     await hydrateUser(data.user.id);
-    return true;
+    return { ok: true };
   };
 
-  const register = async (data: RegisterData): Promise<boolean> => {
+  const register = async (data: RegisterData): Promise<AuthResult> => {
     const { data: authData, error } = await supabase.auth.signUp({
       email: data.email,
       password: data.password,
@@ -208,7 +217,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     if (error || !authData.user) {
       console.error("register failed:", error?.message);
-      return false;
+      return { ok: false, error: error?.message ?? "Sign up failed" };
     }
 
     // If email confirmation is ON in the Supabase dashboard, session will be
@@ -216,8 +225,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // If it's OFF, we get a session immediately and hydrate.
     if (authData.session) {
       await hydrateUser(authData.user.id);
+      return { ok: true };
     }
-    return true;
+    return { ok: true, needsEmailConfirmation: true };
   };
 
   const logout = () => {
