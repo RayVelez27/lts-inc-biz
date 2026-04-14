@@ -6,6 +6,17 @@
 //   node scripts/fetch-from-deco.mjs --count=100     # add up to N new products
 //   node scripts/fetch-from-deco.mjs --replace       # regenerate the entire file
 //   node scripts/fetch-from-deco.mjs --from-id=1000  # start from a given offset
+//   node scripts/fetch-from-deco.mjs --sequential    # disable bucket sampling
+//
+// Variety sampling (on by default): samples N offset buckets spread evenly
+// across the full catalog so the result isn't 300 Port Authority tees from
+// the same supplier. Pass --sequential to walk the catalog in order instead.
+//
+// Image filter (on by default): DecoNetwork has many products with no image
+// uploaded. The scraper oversamples ~1.7× and drops products whose detail
+// page has an empty og:image before writing, so the file always contains
+// `count` products that will actually render. Pass --include-no-image to keep
+// them (useful if you want to see the raw catalog before pruning).
 //
 // Auth is read from .env.local (DECO_API_USERNAME, DECO_API_PASSWORD).
 //
@@ -53,6 +64,9 @@ const args = Object.fromEntries(
 const COUNT = Number(args.count ?? 50);
 const REPLACE = Boolean(args.replace);
 const FROM_ID_OFFSET = Number(args["from-id"] ?? 0);
+const SEQUENTIAL = Boolean(args.sequential);
+const INCLUDE_NO_IMAGE = Boolean(args["include-no-image"]);
+const OVERSAMPLE = 1.7; // empirical: ~34% of Deco products have no og:image
 
 // ─── default sizes by leaf category (when Deco lists no sizes) ─────────────
 const DEFAULT_SIZES_BY_CATEGORY = {
@@ -94,7 +108,10 @@ async function apiFind({ limit = 100, offset = 0 } = {}) {
   if (json.response_status?.severity === "ERROR") {
     throw new Error(`find: ${json.response_status.description}`);
   }
-  return json.products || json.product || [];
+  return {
+    products: json.products || json.product || [],
+    total: Number(json.total) || 0,
+  };
 }
 
 async function apiGet(ids) {
@@ -189,30 +206,75 @@ function parseExistingIds() {
   return ids;
 }
 
+// ─── ID collection strategies ──────────────────────────────────────────────
+
+async function collectIdsSequential(existingIds, count, startOffset) {
+  const ids = [];
+  let offset = startOffset;
+  while (ids.length < count) {
+    const { products: batch } = await apiFind({ limit: 100, offset });
+    if (!batch.length) break;
+    for (const p of batch) {
+      const id = String(p.product_id);
+      if (existingIds.has(id)) continue;
+      ids.push(id);
+      if (ids.length >= count) break;
+    }
+    offset += batch.length;
+    process.stdout.write(`\r  sequential offset ${offset} → ${ids.length}/${count}`);
+  }
+  process.stdout.write("\n");
+  return ids;
+}
+
+async function collectIdsVariety(existingIds, count) {
+  // Probe the catalog to learn total size.
+  const { total } = await apiFind({ limit: 1, offset: 0 });
+  if (!total) throw new Error("find() reported total=0");
+  console.log(`  catalog has ${total} products; sampling across ${Math.min(total, 50)} buckets`);
+
+  // Pick bucket count so we end up with ~10 IDs per bucket on the low end,
+  // capped at 50 to keep call count reasonable and bucket stride meaningful.
+  const bucketCount = Math.min(50, Math.max(5, Math.ceil(count / 10)));
+  const stride = Math.max(1, Math.floor(total / bucketCount));
+  const perBucket = Math.ceil(count / bucketCount);
+
+  const ids = [];
+  for (let b = 0; b < bucketCount; b++) {
+    if (ids.length >= count) break;
+    const offset = b * stride;
+    const { products: batch } = await apiFind({ limit: perBucket * 3, offset });
+    let taken = 0;
+    for (const p of batch) {
+      const id = String(p.product_id);
+      if (existingIds.has(id) || ids.includes(id)) continue;
+      ids.push(id);
+      taken++;
+      if (taken >= perBucket || ids.length >= count) break;
+    }
+    process.stdout.write(
+      `\r  bucket ${b + 1}/${bucketCount} (offset ${offset}) → ${ids.length}/${count}`,
+    );
+  }
+  process.stdout.write("\n");
+  return ids.slice(0, count);
+}
+
 // ─── main ───────────────────────────────────────────────────────────────────
 async function main() {
   const existingIds = REPLACE ? new Set() : parseExistingIds();
   console.log(`existing products: ${existingIds.size}${REPLACE ? " (will be replaced)" : ""}`);
 
-  // 1. Paginate find() until we have `COUNT` new product IDs.
-  const wantIds = [];
-  let offset = FROM_ID_OFFSET;
-  while (wantIds.length < COUNT) {
-    const batch = await apiFind({ limit: 100, offset });
-    if (!batch.length) {
-      console.log(`find() returned empty at offset ${offset}; stopping`);
-      break;
-    }
-    for (const p of batch) {
-      const id = String(p.product_id);
-      if (existingIds.has(id)) continue;
-      wantIds.push(id);
-      if (wantIds.length >= COUNT) break;
-    }
-    offset += batch.length;
-    process.stdout.write(`\r  find offset ${offset} → ${wantIds.length}/${COUNT} new IDs`);
+  // 1. Collect new product IDs from the Deco API. Oversample so we can
+  //    drop products with no image and still land on `COUNT`.
+  const target = INCLUDE_NO_IMAGE ? COUNT : Math.ceil(COUNT * OVERSAMPLE);
+  let wantIds = [];
+  if (SEQUENTIAL) {
+    wantIds = await collectIdsSequential(existingIds, target, FROM_ID_OFFSET);
+  } else {
+    wantIds = await collectIdsVariety(existingIds, target);
   }
-  console.log();
+  console.log(`  collected ${wantIds.length} candidate IDs (target ${COUNT})`);
 
   if (!wantIds.length) {
     console.log("nothing to fetch");
@@ -235,10 +297,26 @@ async function main() {
   );
 
   // 4. Map to Product shape.
-  const newProducts = detailed.map((row, i) => toProduct(row, meta[i]));
-  console.log(`  mapped ${newProducts.length} products`);
+  let newProducts = detailed.map((row, i) => toProduct(row, meta[i]));
 
-  // 5. Merge into products.ts.
+  // 5. Drop no-image products unless the caller opted in.
+  if (!INCLUDE_NO_IMAGE) {
+    const before = newProducts.length;
+    newProducts = newProducts.filter((p) => p.image);
+    console.log(`  filtered ${before - newProducts.length} no-image products → ${newProducts.length} remain`);
+  }
+
+  // 6. Truncate to the requested COUNT.
+  if (newProducts.length > COUNT) newProducts = newProducts.slice(0, COUNT);
+  console.log(`  final: ${newProducts.length} products`);
+
+  if (newProducts.length < COUNT) {
+    console.warn(
+      `⚠ asked for ${COUNT} but only ${newProducts.length} had images — bump --count higher or pass --include-no-image`,
+    );
+  }
+
+  // 7. Merge into products.ts.
   mergeIntoProductsFile(newProducts, { replace: REPLACE });
   console.log(`✓ wrote ${path.relative(PROJECT_ROOT, PRODUCTS_FILE)}`);
 }
