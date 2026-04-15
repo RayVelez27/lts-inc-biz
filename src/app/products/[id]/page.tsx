@@ -12,7 +12,7 @@ import { getProductById, products, type Product } from "@/lib/products";
 import { getProductReviews, getProductRating, addReview, type Review } from "@/lib/reviews";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import ProductCustomizer from "./customizer";
+import Customizer from "@/components/Customizer/Customizer";
 import {
   ChevronRight,
   Minus,
@@ -27,6 +27,7 @@ import {
   Star,
   ThumbsUp,
   MessageSquare,
+  Wand2,
 } from "lucide-react";
 
 const sizeChart: Record<string, Record<string, string>> = {
@@ -62,6 +63,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState<"details" | "sizing" | "care" | "reviews">("details");
   const [addedToCart, setAddedToCart] = useState(false);
+  const [customizerOpen, setCustomizerOpen] = useState(false);
 
   // Reviews state
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -403,15 +405,15 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
               </button>
             </div>
 
-            {/* DecoNetwork Customizer */}
-            <ProductCustomizer
-              productId={product.id}
-              productName={product.name}
-              basePrice={product.price}
-              selectedSize={selectedSize}
-              selectedColor={selectedColor}
-              quantity={quantity}
-            />
+            {/* Open the in-house design studio */}
+            <button
+              type="button"
+              onClick={() => setCustomizerOpen(true)}
+              className="w-full flex items-center justify-center gap-2 py-4 border-2 border-navy text-navy font-semibold rounded-md hover:bg-navy hover:text-white transition-colors"
+            >
+              <Wand2 className="w-5 h-5" />
+              Start Customizing
+            </button>
 
             {/* Product Features */}
             <div className="grid grid-cols-2 gap-4 mt-6">
@@ -778,6 +780,12 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
       </div>
 
       <Footer />
+
+      <Customizer
+        product={product}
+        isOpen={customizerOpen}
+        onClose={() => setCustomizerOpen(false)}
+      />
     </main>
   );
 }

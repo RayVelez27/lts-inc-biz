@@ -86,9 +86,6 @@ export function Header() {
               alt="LT's Inc"
               className="h-12 w-auto"
             />
-            <div className="flex flex-col">
-              <span className="text-[10px] font-medium text-navy tracking-wide hidden sm:block">Your Logo - Our Maine Craft</span>
-            </div>
           </Link>
 
           {/* Search */}
@@ -118,7 +115,6 @@ export function Header() {
               )}
             </Link>
             <Link href="/cart" className="flex items-center space-x-1 hover:text-gold transition-colors">
-              <span className="hidden sm:block text-gray-600">Shopping Bag</span>
               <div className="relative">
                 <ShoppingBag className="w-6 h-6 text-navy" />
                 <span className="absolute -top-2 -right-2 bg-gold text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">

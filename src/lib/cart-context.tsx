@@ -2,6 +2,38 @@
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
 
+export type CustomizationPlacement =
+  | "front-left-chest"
+  | "front-center"
+  | "full-back"
+  | "left-sleeve"
+  | "right-sleeve";
+
+export interface CustomizationInfo {
+  /** Legacy fields from the old DecoNetwork customizer. Keep optional for
+   *  back-compat with any in-flight cart data in localStorage. */
+  designId?: string;
+  cartItemId?: string;
+  previewUrl?: string;
+
+  /** New in-house customizer fields. */
+  designGroupId?: string; // shared across all size/color variants of one order
+  designImageUrl?: string;
+  designStoragePath?: string;
+  placement?: CustomizationPlacement;
+  designWidthInches?: number;
+  designPosition?: { xPct: number; yPct: number };
+  text?: {
+    content: string;
+    fontFamily: string;
+    color: string;
+  };
+  threadColor?: string;
+  notes?: string;
+  /** Per-item upcharge included in price (e.g. $8 for embroidery). */
+  embroideryFeePerItem?: number;
+}
+
 export interface CartItem {
   id: string;
   name: string;
@@ -11,11 +43,7 @@ export interface CartItem {
   color: string;
   quantity: number;
   category: string;
-  customizationInfo?: {
-    designId?: string;
-    cartItemId?: string;
-    previewUrl?: string;
-  };
+  customizationInfo?: CustomizationInfo;
 }
 
 interface CartContextType {
