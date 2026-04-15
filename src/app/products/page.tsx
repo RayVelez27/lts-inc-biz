@@ -21,6 +21,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { ShoppingBag, Filter, X, ChevronRight, Star, Heart, GitCompare } from "lucide-react";
 
+const PAGE_SIZE = 50;
+
 function ProductsContent() {
   const searchParams = useSearchParams();
   const { addItem } = useCart();
@@ -39,6 +41,12 @@ function ProductsContent() {
   const [quickAddProduct, setQuickAddProduct] = useState<Product | null>(null);
   const [selectedSize, setSelectedSize] = useState("");
   const [selectedColor, setSelectedColor] = useState("");
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+
+  // Reset pagination when the user changes filters or sorting.
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [categoryParam, subcategoryParam, newParam, featuredParam, selectedColors, selectedSizes, sortBy]);
 
   // Get all unique colors and sizes
   const allColors = useMemo(() => {
@@ -348,7 +356,7 @@ function ProductsContent() {
           {/* Product Grid */}
           <div className="flex-1">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredProducts.map((product) => {
+              {filteredProducts.slice(0, visibleCount).map((product) => {
                 const inWishlist = isInWishlist(product.id);
                 const inCompare = isComparing(product.id);
 
@@ -451,6 +459,23 @@ function ProductsContent() {
                 );
               })}
             </div>
+
+            {filteredProducts.length > 0 && (
+              <div className="mt-8 flex flex-col items-center gap-3">
+                <p className="text-sm text-gray-500">
+                  Showing {Math.min(visibleCount, filteredProducts.length)} of {filteredProducts.length}
+                </p>
+                {visibleCount < filteredProducts.length && (
+                  <button
+                    type="button"
+                    onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
+                    className="px-8 py-3 bg-navy text-white font-semibold rounded-md hover:bg-navy-dark transition-colors"
+                  >
+                    Load More
+                  </button>
+                )}
+              </div>
+            )}
 
             {filteredProducts.length === 0 && (
               <div className="text-center py-16">
