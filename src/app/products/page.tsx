@@ -9,6 +9,7 @@ import { useCart } from "@/lib/cart-context";
 import { useWishlist } from "@/lib/wishlist-context";
 import { useCompare } from "@/lib/compare-context";
 import { products, categories, type Product } from "@/lib/products";
+import { resolveColorHex } from "@/lib/color-map";
 import { Badge } from "@/components/ui/badge";
 import {
   Select,
@@ -449,7 +450,7 @@ function ProductsContent() {
                               <span
                                 key={color.id}
                                 className="w-4 h-4 rounded-full border border-gray-300"
-                                style={{ backgroundColor: color.hex || "#c5a572" }}
+                                style={{ backgroundColor: color.hex || resolveColorHex(color.name) }}
                                 title={color.name}
                               />
                             ))}

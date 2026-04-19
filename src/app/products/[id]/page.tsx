@@ -9,6 +9,7 @@ import { useCart } from "@/lib/cart-context";
 import { useAuth } from "@/lib/auth-context";
 import { useWishlist } from "@/lib/wishlist-context";
 import { getProductById, products, type Product } from "@/lib/products";
+import { resolveColorHex } from "@/lib/color-map";
 import { getProductReviews, getProductRating, addReview, type Review } from "@/lib/reviews";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -155,25 +156,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
     .filter((p) => p.category === product.category && p.id !== product.id)
     .slice(0, 4);
 
-  const getColorStyle = (color: string) => {
-    const colorMap: Record<string, string> = {
-      White: "#fff",
-      Navy: "#1a3a5c",
-      Black: "#000",
-      Gray: "#6b7280",
-      Charcoal: "#374151",
-      Red: "#dc2626",
-      "Forest Green": "#166534",
-      Burgundy: "#7f1d1d",
-      Yellow: "#eab308",
-      "Light Blue": "#93c5fd",
-      Blue: "#2563eb",
-      Cream: "#fef3c7",
-      "Natural/Navy": "#f5f2ed",
-      "Natural/Red": "#f5f2ed",
-    };
-    return colorMap[color] || "#c5a572";
-  };
+  const getColorStyle = (color: string) => resolveColorHex(color);
 
   return (
     <main className="min-h-screen bg-white">
