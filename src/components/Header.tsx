@@ -31,7 +31,7 @@ export function Header() {
     { name: "POLOS", href: "/products?category=Polos", key: "Polos" },
     { name: "HOODIES", href: "/products?category=Hoodies", key: "Hoodies" },
     { name: "JACKETS", href: "/products?category=Jackets", key: "Jackets" },
-    { name: "CAPS", href: "/products?category=Caps", key: "Caps" },
+    { name: "CARHARTT", href: "/products?badge=CARHARTT", key: null },
     { name: "FEATURED", href: "/products?featured=true", key: null },
   ];
 

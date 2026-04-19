@@ -33,6 +33,7 @@ function ProductsContent() {
   const subcategoryParam = searchParams.get("subcategory");
   const newParam = searchParams.get("new");
   const featuredParam = searchParams.get("featured");
+  const badgeParam = searchParams.get("badge");
 
   const [sortBy, setSortBy] = useState("featured");
   const [selectedColors, setSelectedColors] = useState<string[]>([]);
@@ -46,7 +47,7 @@ function ProductsContent() {
   // Reset pagination when the user changes filters or sorting.
   useEffect(() => {
     setVisibleCount(PAGE_SIZE);
-  }, [categoryParam, subcategoryParam, newParam, featuredParam, selectedColors, selectedSizes, sortBy]);
+  }, [categoryParam, subcategoryParam, newParam, featuredParam, badgeParam, selectedColors, selectedSizes, sortBy]);
 
   // Get all unique colors and sizes
   const allColors = useMemo(() => {
@@ -85,6 +86,11 @@ function ProductsContent() {
       result = result.filter((p) => p.featured);
     }
 
+    // Badge filter (e.g. ?badge=CARHARTT)
+    if (badgeParam) {
+      result = result.filter((p) => p.badge === badgeParam);
+    }
+
     // Color filter
     if (selectedColors.length > 0) {
       result = result.filter((p) =>
@@ -116,7 +122,7 @@ function ProductsContent() {
     }
 
     return result;
-  }, [categoryParam, subcategoryParam, newParam, featuredParam, selectedColors, selectedSizes, sortBy]);
+  }, [categoryParam, subcategoryParam, newParam, featuredParam, badgeParam, selectedColors, selectedSizes, sortBy]);
 
   const handleColorToggle = (color: string) => {
     setSelectedColors((prev) =>
