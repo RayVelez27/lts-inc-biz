@@ -294,59 +294,6 @@ function ProductsContent() {
           </div>
         </div>
 
-        {/* Most Popular — shown only on the unfiltered /products view */}
-        {isUnfiltered && mostPopular.length > 0 && (
-          <div className="mb-10">
-            <h2 className="text-2xl font-bold text-navy mb-5">Most Popular</h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5">
-              {mostPopular.map((p) => (
-                <Link
-                  key={p.id}
-                  href={`/products/${p.id}`}
-                  className="group bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow"
-                >
-                  <div className="relative aspect-square overflow-hidden bg-gray-100">
-                    <img
-                      src={p.image}
-                      alt={p.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                    {p.badge && (
-                      <span className="absolute top-3 left-3 bg-navy text-white text-xs px-2 py-1 rounded font-medium">
-                        {p.badge}
-                      </span>
-                    )}
-                    <span className="absolute top-3 right-3 bg-gold text-navy text-xs px-2 py-1 rounded font-semibold">
-                      Popular
-                    </span>
-                  </div>
-                  <div className="p-3">
-                    <h3 className="font-semibold text-navy text-sm group-hover:text-gold transition-colors line-clamp-2">
-                      {p.name}
-                    </h3>
-                    <p className="text-navy font-bold mt-1">${p.price.toFixed(2)}</p>
-                    <div className="flex gap-1 mt-2">
-                      {(p.colorSwatches ?? p.colors.map((n) => ({ id: n, name: n, hex: "" })))
-                        .slice(0, 4)
-                        .map((c) => (
-                          <span
-                            key={c.id}
-                            className="w-3 h-3 rounded-full border border-gray-300"
-                            style={{ backgroundColor: c.hex || resolveColorHex(c.name) }}
-                            title={c.name}
-                          />
-                        ))}
-                      {p.colors.length > 4 && (
-                        <span className="text-xs text-gray-500">+{p.colors.length - 4}</span>
-                      )}
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </div>
-        )}
-
         <div className="flex gap-8">
           {/* Filters Sidebar */}
           <aside className={`${showFilters ? 'block' : 'hidden'} md:block w-64 flex-shrink-0`}>
@@ -452,6 +399,59 @@ function ProductsContent() {
 
           {/* Product Grid */}
           <div className="flex-1">
+            {/* Most Popular — shown only on the unfiltered /products view */}
+            {isUnfiltered && mostPopular.length > 0 && (
+              <div className="mb-8">
+                <h2 className="text-2xl font-bold text-navy mb-4">Most Popular</h2>
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                  {mostPopular.map((p) => (
+                    <Link
+                      key={p.id}
+                      href={`/products/${p.id}`}
+                      className="group bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow"
+                    >
+                      <div className="relative aspect-square overflow-hidden bg-gray-100">
+                        <img
+                          src={p.image}
+                          alt={p.name}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        />
+                        {p.badge && (
+                          <span className="absolute top-3 left-3 bg-navy text-white text-xs px-2 py-1 rounded font-medium">
+                            {p.badge}
+                          </span>
+                        )}
+                        <span className="absolute top-3 right-3 bg-gold text-navy text-xs px-2 py-1 rounded font-semibold">
+                          Popular
+                        </span>
+                      </div>
+                      <div className="p-3">
+                        <h3 className="font-semibold text-navy text-sm group-hover:text-gold transition-colors line-clamp-2">
+                          {p.name}
+                        </h3>
+                        <p className="text-navy font-bold mt-1">${p.price.toFixed(2)}</p>
+                        <div className="flex gap-1 mt-2">
+                          {(p.colorSwatches ?? p.colors.map((n) => ({ id: n, name: n, hex: "" })))
+                            .slice(0, 4)
+                            .map((c) => (
+                              <span
+                                key={c.id}
+                                className="w-3 h-3 rounded-full border border-gray-300"
+                                style={{ backgroundColor: c.hex || resolveColorHex(c.name) }}
+                                title={c.name}
+                              />
+                            ))}
+                          {p.colors.length > 4 && (
+                            <span className="text-xs text-gray-500">+{p.colors.length - 4}</span>
+                          )}
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredProducts.slice(0, visibleCount).map((product) => {
                 const inWishlist = isInWishlist(product.id);
