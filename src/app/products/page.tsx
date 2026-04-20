@@ -24,6 +24,36 @@ import { ShoppingBag, Filter, X, ChevronRight, Star, Heart, GitCompare } from "l
 
 const PAGE_SIZE = 50;
 
+// Hand-picked "Most Popular" IDs for Portland, ME businesses.
+const MOST_POPULAR_IDS = [
+  "312774591", // Carhartt Duck Detroit Jacket
+  "312766146", // The North Face ThermoBall Trekker Jacket
+  "312754681", // Nike Tech Basic Dri-FIT Polo
+  "312774596", // Carhartt Cotton Canvas Cap
+  "312765721", // Columbia Ascender Soft Shell Jacket
+  "312758616", // Eddie Bauer Fleece Vest
+  "312795671", // HUK Pursuit Performance Polo
+  "312768686", // Carhartt Rain Defender Hooded Zip Front
+];
+
+// Brand priority for default sort — Carhartt & workwear first.
+const BRAND_PRIORITY: Record<string, number> = {
+  CARHARTT: 100,
+  "THE NORTH FACE": 90, COLUMBIA: 90, "EDDIE BAUER": 90,
+  "DRI DUCK": 85, SPYDER: 85, "BERNE APPAREL": 85,
+  HUK: 80, "UNDER ARMOUR": 80, MARMOT: 80,
+  CHAMPION: 70, NIKE: 70, ADIDAS: 70,
+  "CORNERSTONE": 65, KISHIGO: 65,
+  "BROOKS BROTHERS": 60, "NEW ERA": 60,
+  "PORT AUTHORITY": 55, "SPORT TEK": 55,
+  "INDEPENDENT TRADING CO.": 50, DISTRICT: 50, "NORTH END": 50,
+};
+
+function brandScore(badge?: string): number {
+  if (!badge) return 0;
+  return BRAND_PRIORITY[badge] ?? 30;
+}
+
 function ProductsContent() {
   const searchParams = useSearchParams();
   const { addItem } = useCart();
@@ -119,7 +149,7 @@ function ProductsContent() {
         break;
       case "featured":
       default:
-        result.sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0));
+        result.sort((a, b) => brandScore(b.badge) - brandScore(a.badge));
     }
 
     return result;
@@ -184,6 +214,13 @@ function ProductsContent() {
       addToCompare(product);
     }
   };
+
+  // "Most Popular" — only shown on the unfiltered /products view (no query params).
+  const isUnfiltered = !categoryParam && !subcategoryParam && !newParam && !featuredParam && !badgeParam;
+  const mostPopular = useMemo(
+    () => MOST_POPULAR_IDS.map((id) => products.find((p) => p.id === id)).filter(Boolean) as Product[],
+    [],
+  );
 
   const getPageTitle = () => {
     if (newParam === "true") return "New Arrivals";
@@ -256,6 +293,59 @@ function ProductsContent() {
             </Select>
           </div>
         </div>
+
+        {/* Most Popular — shown only on the unfiltered /products view */}
+        {isUnfiltered && mostPopular.length > 0 && (
+          <div className="mb-10">
+            <h2 className="text-2xl font-bold text-navy mb-5">Most Popular</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5">
+              {mostPopular.map((p) => (
+                <Link
+                  key={p.id}
+                  href={`/products/${p.id}`}
+                  className="group bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow"
+                >
+                  <div className="relative aspect-square overflow-hidden bg-gray-100">
+                    <img
+                      src={p.image}
+                      alt={p.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                    {p.badge && (
+                      <span className="absolute top-3 left-3 bg-navy text-white text-xs px-2 py-1 rounded font-medium">
+                        {p.badge}
+                      </span>
+                    )}
+                    <span className="absolute top-3 right-3 bg-gold text-navy text-xs px-2 py-1 rounded font-semibold">
+                      Popular
+                    </span>
+                  </div>
+                  <div className="p-3">
+                    <h3 className="font-semibold text-navy text-sm group-hover:text-gold transition-colors line-clamp-2">
+                      {p.name}
+                    </h3>
+                    <p className="text-navy font-bold mt-1">${p.price.toFixed(2)}</p>
+                    <div className="flex gap-1 mt-2">
+                      {(p.colorSwatches ?? p.colors.map((n) => ({ id: n, name: n, hex: "" })))
+                        .slice(0, 4)
+                        .map((c) => (
+                          <span
+                            key={c.id}
+                            className="w-3 h-3 rounded-full border border-gray-300"
+                            style={{ backgroundColor: c.hex || resolveColorHex(c.name) }}
+                            title={c.name}
+                          />
+                        ))}
+                      {p.colors.length > 4 && (
+                        <span className="text-xs text-gray-500">+{p.colors.length - 4}</span>
+                      )}
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="flex gap-8">
           {/* Filters Sidebar */}
