@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ChevronDown,
   Search,
@@ -16,13 +16,26 @@ import { useCart } from "@/lib/cart-context";
 import { useAuth } from "@/lib/auth-context";
 import { useWishlist } from "@/lib/wishlist-context";
 import { categories } from "@/lib/products";
-import { SearchBar } from "./SearchBar";
+import SearchModal from "./SearchModal";
 import { LanguageSelector } from "@/lib/i18n";
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+  const [searchOpen, setSearchOpen] = useState(false);
   const { totalItems } = useCart();
+
+  // Cmd/Ctrl+K shortcut to open search
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        setSearchOpen(true);
+      }
+    };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, []);
   const { user } = useAuth();
   const { totalItems: wishlistCount } = useWishlist();
 
@@ -88,18 +101,18 @@ export function Header() {
             />
           </Link>
 
-          {/* Search */}
-          <div className="hidden md:flex flex-1 max-w-md mx-8">
-            <div className="relative w-full flex">
-              <SearchBar className="flex-1" />
-              <button
-                type="button"
-                className="px-4 bg-navy text-white rounded-r-md hover:bg-navy-dark transition-colors"
-              >
-                <Search className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
+          {/* Search trigger */}
+          <button
+            type="button"
+            onClick={() => setSearchOpen(true)}
+            className="hidden md:flex flex-1 max-w-md mx-8 items-center gap-3 px-4 py-2 border border-gray-300 rounded-md text-gray-400 hover:border-navy hover:text-gray-600 transition-colors"
+          >
+            <Search className="w-4 h-4 shrink-0" />
+            <span className="text-sm flex-1 text-left">Search products, brands…</span>
+            <kbd className="text-xs bg-gray-100 px-2 py-0.5 rounded border border-gray-200">
+              ⌘K
+            </kbd>
+          </button>
 
           {/* Actions */}
           <div className="flex items-center space-x-4">
@@ -176,13 +189,14 @@ export function Header() {
       {/* Mobile menu */}
       {isMenuOpen && (
         <div className="md:hidden bg-white border-t border-gray-200 py-4 px-4">
-          <div className="mb-4">
-            <input
-              type="text"
-              placeholder="Search..."
-              className="w-full px-4 py-2 border border-gray-300 rounded-md"
-            />
-          </div>
+          <button
+            type="button"
+            onClick={() => { setSearchOpen(true); setIsMenuOpen(false); }}
+            className="w-full flex items-center gap-2 mb-4 px-4 py-2 border border-gray-300 rounded-md text-gray-400"
+          >
+            <Search className="w-4 h-4" />
+            <span className="text-sm">Search products…</span>
+          </button>
           <ul className="space-y-2">
             {navItems.map((item) => (
               <li key={item.name}>
@@ -221,6 +235,7 @@ export function Header() {
           </div>
         </div>
       )}
+      <SearchModal isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
     </header>
   );
 }
