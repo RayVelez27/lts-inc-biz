@@ -47,7 +47,7 @@ const env = Object.fromEntries(
       return [l.slice(0, i).trim(), l.slice(i + 1).trim()];
     }),
 );
-const BASE = env.NEXT_PUBLIC_DECO_API_URL || "https://www.ltsportland.com";
+const BASE = env.NEXT_PUBLIC_DECO_API_URL || "https://ltsportland.deco-apparel.com";
 const USER = env.DECO_API_USERNAME;
 const PASS = env.DECO_API_PASSWORD;
 if (!USER || !PASS) {
